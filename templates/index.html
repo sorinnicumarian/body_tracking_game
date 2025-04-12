@@ -9,18 +9,27 @@
 <body>
     <div class="container">
         <h1>Fruit Samurai</h1>
+
+        <!-- Start Game Button -->
         <button id="startButton">Start Game</button>
+
+        <!-- Score Container -->
         <div id="scoreContainer">
             <p id="score">Score: 0</p>
         </div>
+
+        <!-- Game Over Message -->
         <div id="gameOverMessage" style="display: none;">
             <p>Game Over! Final Score: <span id="finalScore">0</span></p>
             <button id="restartButton">Restart Game</button>
         </div>
-        <img id="gameCanvas" src="{{ url_for('video_feed') }}" alt="Game Video Feed">
+
+        <!-- Video Feed (Webcam) -->
+        <img id="gameCanvas" src="{{ url_for('video_feed') }}" alt="Game Video Feed" style="display: none;"> <!-- Hide initially -->
     </div>
 
     <script>
+        // Start Game Button
         document.getElementById('startButton').addEventListener('click', function() {
             fetch('/start_game', {
                 method: 'POST'
@@ -28,13 +37,15 @@
             .then(response => response.json())
             .then(data => {
                 console.log(data.message);  // Log game start message
-                document.getElementById('score').textContent = 'Score: 0';
+                document.getElementById('score').textContent = 'Score: 0';  // Reset score
                 document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
                 document.getElementById('startButton').style.display = 'none';  // Hide start button
+                document.getElementById('gameCanvas').style.display = 'block';  // Show video feed when the game starts
             })
             .catch(error => console.error('Error starting the game:', error));
         });
 
+        // Restart Game Button
         document.getElementById('restartButton').addEventListener('click', function() {
             fetch('/start_game', {
                 method: 'POST'
@@ -44,6 +55,7 @@
                 console.log(data.message);  // Log game restart message
                 document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
                 document.getElementById('startButton').style.display = 'none';  // Hide start button
+                document.getElementById('gameCanvas').style.display = 'block';  // Show video feed
             })
             .catch(error => console.error('Error restarting the game:', error));
         });
@@ -53,7 +65,17 @@
             document.getElementById('gameOverMessage').style.display = 'block';
             document.getElementById('finalScore').textContent = finalScore;
             document.getElementById('startButton').style.display = 'block';  // Show the start button again
+            document.getElementById('gameCanvas').style.display = 'none';  // Hide video feed when game is over
         }
+
+        // Fetch the game over state and score from backend after game ends
+        fetch('/game_over')
+            .then(response => response.json())
+            .then(data => {
+                if (data.game_over) {
+                    showGameOver(data.final_score);  // Show the final score on Game Over
+                }
+            });
     </script>
 </body>
 </html>

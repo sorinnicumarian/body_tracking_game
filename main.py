@@ -1,135 +1,146 @@
 import cv2
-import mediapipe as mp
 import random
 import numpy as np
 from flask import Flask, render_template, Response, jsonify
 
-# Initialize MediaPipe Hand model
-mp_hand = mp.solutions.hands
-hands = mp_hand.Hands()
-
 # Initialize Flask app
 app = Flask(__name__)
 
-# Game state flags
-game_over = False
-game_started = False
-score = 0  # Initialize the score
+# Game State Management
+class GameState:
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    GAME_OVER = "game_over"
 
-# Function to draw a simple watermelon (green outer layer, red inner layer)
-def draw_watermelon():
-    # Create a blank image with a black background
-    image = np.zeros((100, 100, 3), dtype=np.uint8)
+    def __init__(self):
+        self.state = GameState.NOT_STARTED
+        self.score = 0
 
-    # Draw the green outer skin (circle)
-    cv2.circle(image, (50, 50), 45, (0, 255, 0), -1)  # Green circle for outer skin
+    def start_game(self):
+        self.state = GameState.IN_PROGRESS
+        self.score = 0
 
-    # Draw the red inner flesh (circle)
-    cv2.circle(image, (50, 50), 35, (0, 0, 255), -1)  # Red circle for flesh
+    def end_game(self):
+        self.state = GameState.GAME_OVER
 
-    return image
+    def reset_game(self):
+        self.start_game()
 
-# Function to create a new watermelon with random position
-def create_new_watermelon():
-    watermelon = {
-        "name": "watermelon",
-        "image": draw_watermelon(),
-        "position": [random.randint(0, 500), -50],  # Random horizontal position and start from above
-        "cut": False
-    }
-    print(f"New watermelon created: {watermelon}")  # Log watermelon creation
-    return watermelon
+# Fruit Class (Base Class for different fruits)
+class Fruit:
+    def __init__(self, name, image, position):
+        self.name = name
+        self.image = image
+        self.position = position
+        self.cut = False
 
-# Fruits and their properties (start with 1 watermelon)
-fruits = [create_new_watermelon()]
+    def update_position(self, y_change):
+        self.position[1] += y_change
 
-# Frame generator to send video frames to the web page
+    def is_cut(self):
+        return self.cut
+
+    def cut_fruit(self):
+        self.cut = True
+        self.position = [-50, -50]  # Move off-screen after cut
+
+# Watermelon Class (inherits Fruit)
+class Watermelon(Fruit):
+    def __init__(self):
+        image = self.create_watermelon_image()
+        super().__init__("watermelon", image, [random.randint(0, 500), -50])
+
+    def create_watermelon_image(self):
+        # Create a simple watermelon with green skin and red flesh
+        image = np.zeros((100, 100, 3), dtype=np.uint8)
+        cv2.circle(image, (50, 50), 45, (0, 255, 0), -1)  # Green outer skin
+        cv2.circle(image, (50, 50), 35, (0, 0, 255), -1)  # Red inner flesh
+        return image
+
+# Game Class for managing game logic
+class Game:
+    def __init__(self):
+        self.state = GameState()
+        self.fruits = []
+        self.current_fruit = None
+
+    def start(self):
+        self.state.start_game()
+        self.create_new_fruit()
+
+    def end(self):
+        self.state.end_game()
+
+    def reset(self):
+        self.state.reset_game()
+        self.create_new_fruit()
+
+    def create_new_fruit(self):
+        self.current_fruit = Watermelon()
+        self.fruits.append(self.current_fruit)
+
+    def update(self):
+        if self.state.state == GameState.IN_PROGRESS:
+            self.current_fruit.update_position(5)
+
+            if self.current_fruit.position[1] > 480:  # Fruit has fallen off screen
+                self.end()
+
+            if self.current_fruit.is_cut():
+                self.create_new_fruit()
+                self.state.score += 1
+
+    def get_state(self):
+        return self.state.state
+
+    def get_score(self):
+        return self.state.score
+
+    def get_fruit(self):
+        return self.current_fruit
+
+# Initialize the game
+game = Game()
+
+# Frame generator for streaming video to the frontend
 def gen_frames():
-    global fruits, game_over, game_started, score
-    
     cap = cv2.VideoCapture(0)
-    
+
     while True:
-        if game_over:
-            print(f"Game Over! Final score: {score}")
-            break  # Exit the loop if the game is over
-        
         ret, frame = cap.read()
         if not ret:
             break
 
         # Resize the frame to reduce size for streaming
         frame = cv2.resize(frame, (640, 480))  # Adjust this as needed for performance
-        
-        # Flip the frame to correct the mirrored image
-        frame = cv2.flip(frame, 1)
+        frame = cv2.flip(frame, 1)  # Flip the frame to correct the mirrored image
 
-        # Convert the frame to RGB for MediaPipe
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Game logic update
+        game.update()
 
-        # Get hand landmarks
-        results_hand = hands.process(image_rgb)
+        # Draw the watermelon on the frame
+        if game.get_state() == GameState.IN_PROGRESS:
+            watermelon = game.get_fruit()
+            if not watermelon.is_cut():
+                fruit_img = watermelon.image
+                if fruit_img is not None:
+                    fruit_resized = cv2.resize(fruit_img, (50, 50))
 
-        # Check if game is over and handle restart
-        if game_over:
-            frame = cv2.putText(frame, "GAME OVER! Press START to Restart", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            continue
-        
-        if game_started:
-            if fruits:  # Ensure there's a watermelon to process
-                watermelon = fruits[0]  # Only one fruit for now (watermelon)
-                
-                if watermelon['cut']:
-                    # Make the watermelon disappear from the screen
-                    watermelon['position'] = [-50, -50]  # Move it off-screen
-                    score += 1  # Increase score when the fruit is cut
-                    print(f"Watermelon cut! New score: {score}")
+                    # Prevent watermelon from going out of frame
+                    if watermelon.position[1] + fruit_resized.shape[0] <= frame.shape[0]:
+                        # Ensure we are within frame bounds before drawing
+                        y_start = max(0, watermelon.position[1])
+                        y_end = min(frame.shape[0], watermelon.position[1] + fruit_resized.shape[0])
+                        x_start = max(0, watermelon.position[0])
+                        x_end = min(frame.shape[1], watermelon.position[0] + fruit_resized.shape[1])
 
-                    # After cutting, create a new watermelon
-                    fruits[0] = create_new_watermelon()
+                        frame[y_start:y_end, x_start:x_end] = fruit_resized[:y_end - y_start, :x_end - x_start]
 
-                    continue  # Skip the rest of the code for the watermelon
+        # Game Over text and frame manipulation
+        if game.get_state() == GameState.GAME_OVER:
+            frame = cv2.putText(frame, f"GAME OVER! Final Score: {game.get_score()}", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-                watermelon['position'][1] += 5  # Move the fruit downwards
-                
-                # Check if fruit is within hand's cutting range (index finger tip)
-                if results_hand.multi_hand_landmarks:
-                    for hand_landmarks in results_hand.multi_hand_landmarks:
-                        finger_tip = hand_landmarks.landmark[8]
-                        # Check if the finger is near the fruit
-                        if (finger_tip.x * frame.shape[1] > watermelon['position'][0] - 50 and
-                            finger_tip.x * frame.shape[1] < watermelon['position'][0] + 50 and
-                            finger_tip.y * frame.shape[0] > watermelon['position'][1] - 50 and
-                            finger_tip.y * frame.shape[0] < watermelon['position'][1] + 50):
-                            # Simulate fruit cut by setting 'cut' flag
-                            watermelon['cut'] = True
-                            print(f"Watermelon cut at position: {watermelon['position']}")
-
-                # Ensure the fruit's position is within frame boundaries
-                if watermelon['position'][0] >= 0 and watermelon['position'][0] + 50 <= frame.shape[1] and watermelon['position'][1] >= 0:
-                    # Draw the fruit (image representation)
-                    fruit_img = watermelon['image']
-                    if fruit_img is not None:  # Check if the image is loaded correctly
-                        fruit_resized = cv2.resize(fruit_img, (50, 50))  # Resize the fruit image to fit on screen
-                        # Make sure the fruit is within the frame before placing
-                        if watermelon['position'][1] + fruit_resized.shape[0] <= frame.shape[0]:
-                            frame[watermelon['position'][1]:watermelon['position'][1] + fruit_resized.shape[0], 
-                                  watermelon['position'][0]:watermelon['position'][0] + fruit_resized.shape[1]] = fruit_resized
-
-                # If fruit falls off screen, game over
-                if watermelon['position'][1] > frame.shape[0]:
-                    game_over = True
-                    fruits = []  # Ensure the list is empty when the game is over
-                    print("Watermelon fell off-screen. Game Over!")
-
-                # Display the current score on the top of the frame
-                frame = cv2.putText(frame, f"Score: {score}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-
-        # Start game prompt when the game is not started
-        if not game_started:
-            frame = cv2.putText(frame, "Press Start to Begin", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-
-        # Encode image as jpeg for Flask
+        # Encode image as jpeg for Flask to send to the frontend
         _, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
 
@@ -148,24 +159,15 @@ def video_feed():
 
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    global game_started, score, fruits, game_over
-    game_started = True  # Start the game when this route is triggered
-    score = 0  # Reset the score
-    game_over = False  # Reset the game over state
-    fruits = [
-        create_new_watermelon(),
-    ]
-    print("Game Started!")
-    return jsonify(message="Game Started!")  # Respond with a message to confirm the game started
+    game.start()  # Start or reset the game
+    return jsonify(message="Game Started!")
 
 @app.route('/game_over', methods=['GET'])
 def game_over_route():
-    global score
-    # Send the game over message with the final score to the frontend
     return jsonify({
         "game_over": True,
-        "final_score": score
+        "final_score": game.get_score()
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)  # Disable reloader to avoid SystemExit
+    app.run(debug=True, use_reloader=False)
