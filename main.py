@@ -40,14 +40,9 @@ def gen_frames():
     
     cap = cv2.VideoCapture(0)
     
-    if not cap.isOpened():
-        print("Error: Could not open camera.")
-        return  # Stop if camera couldn't be opened
-    
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Error: Failed to capture image.")
             break
 
         # Resize the frame to reduce size for streaming
@@ -75,21 +70,27 @@ def gen_frames():
         # Check if game is over and handle restart
         if game_over:
             frame = cv2.putText(frame, "GAME OVER! Press SPACE to Restart", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
+            continue
+        
         if game_started:
             # Move fruits down the screen
             for fruit in fruits:
                 fruit['position'][1] += 5  # Move the fruit downwards
+                
+                # Debug: Print fruit position
+                print(f"Fruit {fruit['name']} position: {fruit['position']}")
                 
                 # Check if fruit is within hand's cutting range (index finger tip)
                 if results_hand.multi_hand_landmarks:
                     for hand_landmarks in results_hand.multi_hand_landmarks:
                         finger_tip = hand_landmarks.landmark[8]
                         # Check if the finger is near the fruit
-                        if (finger_tip.x * frame.shape[1] > fruit['position'][0] - 30 and
-                            finger_tip.x * frame.shape[1] < fruit['position'][0] + 30 and
-                            finger_tip.y * frame.shape[0] > fruit['position'][1] - 30 and
-                            finger_tip.y * frame.shape[0] < fruit['position'][1] + 30):
+                        if (finger_tip.x * frame.shape[1] > fruit['position'][0] - 50 and
+                            finger_tip.x * frame.shape[1] < fruit['position'][0] + 50 and
+                            finger_tip.y * frame.shape[0] > fruit['position'][1] - 50 and
+                            finger_tip.y * frame.shape[0] < fruit['position'][1] + 50):
+                            # Debug: Log the cut fruit
+                            print(f"Cut fruit: {fruit['name']} at position {fruit['position']}")
                             # Simulate fruit cut by removing it
                             fruit['position'] = [-50, -50]  # Move the fruit off-screen
                             score += 1  # Increase score when a fruit is cut
@@ -138,4 +139,4 @@ def start_game():
     return jsonify(message="Game Started!")  # Respond with a message to confirm the game started
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
