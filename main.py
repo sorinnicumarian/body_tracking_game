@@ -40,9 +40,14 @@ def gen_frames():
     
     cap = cv2.VideoCapture(0)
     
+    if not cap.isOpened():
+        print("Error: Could not open camera.")
+        return  # Stop if camera couldn't be opened
+    
     while True:
         ret, frame = cap.read()
         if not ret:
+            print("Error: Failed to capture image.")
             break
 
         # Resize the frame to reduce size for streaming
@@ -70,8 +75,7 @@ def gen_frames():
         # Check if game is over and handle restart
         if game_over:
             frame = cv2.putText(frame, "GAME OVER! Press SPACE to Restart", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            continue
-        
+
         if game_started:
             # Move fruits down the screen
             for fruit in fruits:
