@@ -2,3 +2,5 @@ mediapipe
 opencv-python
 flask
 pygame
+cairosvg
+watchdog
