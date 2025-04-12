@@ -8,9 +8,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>Fruit Cutting Game</h1>
+        <h1>Fruit Samurai</h1>
         <button id="startButton">Start Game</button>
-        <div id="score">Score: 0</div>
+        <div id="scoreContainer">
+            <p id="score">Score: 0</p>
+        </div>
+        <div id="gameOverMessage" style="display: none;">
+            <p>Game Over! Final Score: <span id="finalScore">0</span></p>
+            <button id="restartButton">Restart Game</button>
+        </div>
         <img id="gameCanvas" src="{{ url_for('video_feed') }}" alt="Game Video Feed">
     </div>
 
@@ -23,9 +29,31 @@
             .then(data => {
                 console.log(data.message);  // Log game start message
                 document.getElementById('score').textContent = 'Score: 0';
+                document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
+                document.getElementById('startButton').style.display = 'none';  // Hide start button
             })
             .catch(error => console.error('Error starting the game:', error));
         });
+
+        document.getElementById('restartButton').addEventListener('click', function() {
+            fetch('/start_game', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);  // Log game restart message
+                document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
+                document.getElementById('startButton').style.display = 'none';  // Hide start button
+            })
+            .catch(error => console.error('Error restarting the game:', error));
+        });
+
+        // Function to show Game Over message
+        function showGameOver(finalScore) {
+            document.getElementById('gameOverMessage').style.display = 'block';
+            document.getElementById('finalScore').textContent = finalScore;
+            document.getElementById('startButton').style.display = 'block';  // Show the start button again
+        }
     </script>
 </body>
 </html>

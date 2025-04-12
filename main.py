@@ -31,12 +31,14 @@ def draw_watermelon():
 
 # Function to create a new watermelon with random position
 def create_new_watermelon():
-    return {
+    watermelon = {
         "name": "watermelon",
         "image": draw_watermelon(),
         "position": [random.randint(0, 500), -50],  # Random horizontal position and start from above
         "cut": False
     }
+    print(f"New watermelon created: {watermelon}")  # Log watermelon creation
+    return watermelon
 
 # Fruits and their properties (start with 1 watermelon)
 fruits = [create_new_watermelon()]
@@ -48,6 +50,10 @@ def gen_frames():
     cap = cv2.VideoCapture(0)
     
     while True:
+        if game_over:
+            print(f"Game Over! Final score: {score}")
+            break  # Exit the loop if the game is over
+        
         ret, frame = cap.read()
         if not ret:
             break
@@ -77,6 +83,7 @@ def gen_frames():
                     # Make the watermelon disappear from the screen
                     watermelon['position'] = [-50, -50]  # Move it off-screen
                     score += 1  # Increase score when the fruit is cut
+                    print(f"Watermelon cut! New score: {score}")
 
                     # After cutting, create a new watermelon
                     fruits[0] = create_new_watermelon()
@@ -96,6 +103,7 @@ def gen_frames():
                             finger_tip.y * frame.shape[0] < watermelon['position'][1] + 50):
                             # Simulate fruit cut by setting 'cut' flag
                             watermelon['cut'] = True
+                            print(f"Watermelon cut at position: {watermelon['position']}")
 
                 # Ensure the fruit's position is within frame boundaries
                 if watermelon['position'][0] >= 0 and watermelon['position'][0] + 50 <= frame.shape[1] and watermelon['position'][1] >= 0:
@@ -111,6 +119,8 @@ def gen_frames():
                 # If fruit falls off screen, game over
                 if watermelon['position'][1] > frame.shape[0]:
                     game_over = True
+                    fruits = []  # Ensure the list is empty when the game is over
+                    print("Watermelon fell off-screen. Game Over!")
 
                 # Display the current score on the top of the frame
                 frame = cv2.putText(frame, f"Score: {score}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
@@ -145,7 +155,17 @@ def start_game():
     fruits = [
         create_new_watermelon(),
     ]
+    print("Game Started!")
     return jsonify(message="Game Started!")  # Respond with a message to confirm the game started
+
+@app.route('/game_over', methods=['GET'])
+def game_over_route():
+    global score
+    # Send the game over message with the final score to the frontend
+    return jsonify({
+        "game_over": True,
+        "final_score": score
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)  # Disable reloader to avoid SystemExit
