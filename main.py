@@ -2,11 +2,22 @@ import cv2
 import random
 import numpy as np
 from flask import Flask, render_template, Response, jsonify
+import mediapipe as mp
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Game State Management
+# Initialize MediaPipe Hand model
+mp_hand = mp.solutions.hands
+hands = mp_hand.Hands()
+
+# Global game state
+games_played = 0  # Track the number of games played
+game_over = False
+score = 0
+current_fruit = None
+
+# GameState management
 class GameState:
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
@@ -26,7 +37,7 @@ class GameState:
     def reset_game(self):
         self.start_game()
 
-# Fruit Class (Base Class for different fruits)
+# Fruit Class for creating watermelon
 class Fruit:
     def __init__(self, name, image, position):
         self.name = name
@@ -44,7 +55,6 @@ class Fruit:
         self.cut = True
         self.position = [-50, -50]  # Move off-screen after cut
 
-# Watermelon Class (inherits Fruit)
 class Watermelon(Fruit):
     def __init__(self):
         image = self.create_watermelon_image()
@@ -57,7 +67,7 @@ class Watermelon(Fruit):
         cv2.circle(image, (50, 50), 35, (0, 0, 255), -1)  # Red inner flesh
         return image
 
-# Game Class for managing game logic
+# Game class to manage the state and update
 class Game:
     def __init__(self):
         self.state = GameState()
@@ -65,6 +75,8 @@ class Game:
         self.current_fruit = None
 
     def start(self):
+        global games_played
+        games_played += 1  # Increment game counter
         self.state.start_game()
         self.create_new_fruit()
 
@@ -118,6 +130,12 @@ def gen_frames():
         # Game logic update
         game.update()
 
+        # Convert the frame to RGB for MediaPipe
+        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Get hand landmarks
+        results_hand = hands.process(image_rgb)
+
         # Draw the watermelon on the frame
         if game.get_state() == GameState.IN_PROGRESS:
             watermelon = game.get_fruit()
@@ -128,13 +146,24 @@ def gen_frames():
 
                     # Prevent watermelon from going out of frame
                     if watermelon.position[1] + fruit_resized.shape[0] <= frame.shape[0]:
-                        # Ensure we are within frame bounds before drawing
                         y_start = max(0, watermelon.position[1])
                         y_end = min(frame.shape[0], watermelon.position[1] + fruit_resized.shape[0])
                         x_start = max(0, watermelon.position[0])
                         x_end = min(frame.shape[1], watermelon.position[0] + fruit_resized.shape[1])
 
                         frame[y_start:y_end, x_start:x_end] = fruit_resized[:y_end - y_start, :x_end - x_start]
+
+                # Hand detection and cutting logic
+                if results_hand.multi_hand_landmarks:
+                    for hand_landmarks in results_hand.multi_hand_landmarks:
+                        finger_tip = hand_landmarks.landmark[8]
+                        # Check if the finger is near the watermelon
+                        if (finger_tip.x * frame.shape[1] > watermelon.position[0] - 50 and
+                            finger_tip.x * frame.shape[1] < watermelon.position[0] + 50 and
+                            finger_tip.y * frame.shape[0] > watermelon.position[1] - 50 and
+                            finger_tip.y * frame.shape[0] < watermelon.position[1] + 50):
+                            # Simulate fruit cut by setting 'cut' flag
+                            watermelon.cut_fruit()
 
         # Game Over text and frame manipulation
         if game.get_state() == GameState.GAME_OVER:

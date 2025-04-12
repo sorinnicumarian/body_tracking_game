@@ -92,6 +92,11 @@ button:disabled {
     display: none; /* Hide restart button initially */
 }
 
+#startButton {
+    display: block;
+    margin: 0 auto;
+}
+
 @media screen and (max-width: 600px) {
     h1 {
         font-size: 2rem;

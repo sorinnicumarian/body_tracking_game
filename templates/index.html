@@ -15,12 +15,12 @@
 
         <!-- Score Container -->
         <div id="scoreContainer">
-            <p id="score">Score: 0</p>
+            <p id="score" style="display: none;">Score: 0</p>
         </div>
 
         <!-- Game Over Message -->
         <div id="gameOverMessage" style="display: none;">
-            <p>Game Over! Final Score: <span id="finalScore">0</span></p>
+            <p style="display: none;">Game Over! Final Score: <span id="finalScore">0</span></p>
             <button id="restartButton">Restart Game</button>
         </div>
 
@@ -38,6 +38,7 @@
             .then(data => {
                 console.log(data.message);  // Log game start message
                 document.getElementById('score').textContent = 'Score: 0';  // Reset score
+                document.getElementById('score').style.display = 'block';
                 document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
                 document.getElementById('startButton').style.display = 'none';  // Hide start button
                 document.getElementById('gameCanvas').style.display = 'block';  // Show video feed when the game starts
@@ -53,6 +54,7 @@
             .then(response => response.json())
             .then(data => {
                 console.log(data.message);  // Log game restart message
+                document.getElementById('score').style.display = 'block';
                 document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
                 document.getElementById('startButton').style.display = 'none';  // Hide start button
                 document.getElementById('gameCanvas').style.display = 'block';  // Show video feed
