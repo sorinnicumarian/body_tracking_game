@@ -75,6 +75,7 @@ button:disabled {
     margin-top: 20px;
     font-size: 1.5rem;
     color: #f44336; /* Red color for the Game Over message */
+    display: none; /* Hide initially */
 }
 
 #gameOverMessage button {
@@ -82,19 +83,21 @@ button:disabled {
     padding: 10px 20px;
     font-size: 1rem;
     margin-top: 10px;
+    display: none; /* Hide initially */
 }
 
 #gameOverMessage button:hover {
     background-color: #e53935; /* Slightly darker red on hover */
-}
-
-#restartButton {
-    display: none; /* Hide restart button initially */
+    display: none; /* Hide initially */
 }
 
 #startButton {
     display: block;
     margin: 0 auto;
+}
+
+#restartButton {
+    display: none; /* Hide initially */
 }
 
 @media screen and (max-width: 600px) {
