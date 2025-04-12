@@ -13,19 +13,14 @@
         <!-- Start Game Button -->
         <button id="startButton">Start Game</button>
 
-        <!-- Score Container -->
-        <div id="scoreContainer">
-            <!-- <p id="score" style="display: none;">Score: 0</p> -->
-        </div>
-
         <!-- Game Over Message -->
-        <div id="gameOverMessage">
-            <p>Game Over! Final Score: <span id="finalScore">0</span></p>
-            <button id="restartButton">Restart Game</button>
+        <div id="gameOverMessage" class="hidden">
+            <p id="finalScore" class="hidden">Game Over! Final Score: <span>0</span></p>
+            <!-- <p id="restartButtonParagraph" class="hidden"><button id="restartButton" class="hidden">Restart Game</button></p> -->
         </div>
 
         <!-- Video Feed (Webcam) -->
-        <img id="gameCanvas" src="{{ url_for('video_feed') }}" alt="Game Video Feed"> <!-- Hide initially -->
+        <img id="gameCanvas" src="{{ url_for('video_feed') }}" alt="Game Video Feed" class="hidden"> <!-- Hide initially -->
     </div>
 
     <script>
@@ -37,38 +32,40 @@
             .then(response => response.json())
             .then(data => {
                 console.log(data.message);  // Log game start message5
-                // document.getElementById('score').textContent = 'Score: 0';  // Reset score
-                // document.getElementById('score').style.display = 'block';
-                document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
-                document.getElementById('startButton').style.display = 'none';  // Hide start button
-                document.getElementById('gameCanvas').style.display = 'block';  // Show video feed when the game starts
+                document.getElementById('startButton').classList.add('hidden');  // Hide start button
+                document.getElementById('gameCanvas').classList.remove('hidden');  // Show video feed when the game starts
             })
             .catch(error => console.error('Error starting the game:', error));
         });
 
-        // Restart Game Button
-        document.getElementById('restartButton').addEventListener('click', function() {
-            fetch('/start_game', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data.message);  // Log game restart message
-                document.getElementById('score').style.display = 'block';
-                document.getElementById('gameOverMessage').style.display = 'none';  // Hide game over message
-                document.getElementById('startButton').style.display = 'none';  // Hide start button
-                document.getElementById('gameCanvas').style.display = 'block';  // Show video feed
-            })
-            .catch(error => console.error('Error restarting the game:', error));
-        });
+        // // Restart Game Button
+        // document.getElementById('restartButton').addEventListener('click', function() {
+        //     fetch('/start_game', {
+        //         method: 'POST'
+        //     })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log(data.message);  // Log game restart message
+        //         document.getElementById('score').classList.remove('hidden');
+
+        //         document.getElementById('gameOverMessage').classList.add('hidden');  // Hide game over message
+        //         document.getElementById('finalScore').classList.add('hidden');
+        //         document.getElementById('restartButton').classList.add('hidden');  // Show restart button
+        //         document.getElementById('restartButtonParagraph').classList.add('hidden');  // Show restart button
+        //     })
+        //     .catch(error => console.error('Error restarting the game:', error));
+        // });
 
         // Function to show Game Over message
         function showGameOver(finalScore) {
-            document.getElementById('gameOverMessage').style.display = 'block';
+            document.getElementById('gameCanvas').classList.add('hidden');  // Hide video feed when game is over
+            
             document.getElementById('finalScore').textContent = finalScore;
-            document.getElementById('startButton').style.display = 'block';  // Show the start button again
-            document.getElementById('gameCanvas').style.display = 'none';  // Hide video feed when game is over
-            document.getElementById('restartButton').style.display = 'block';  // Show restart button
+            document.getElementById('gameOverMessage').classList.remove('hidden');
+            document.getElementById('startButton').classList.remove('hidden');  // Show the start button again
+            
+            document.getElementById('restartButton').classList.remove('hidden');  // Show restart button
+            document.getElementById('restartButtonParagraph').classList.remove('hidden');  // Show restart button
         }
 
         // Fetch the game over state and score from backend after game ends

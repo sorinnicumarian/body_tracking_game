@@ -68,14 +68,12 @@ button:disabled {
     border-radius: 10px;
     margin-top: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    display: none; /* Hide the video feed initially */
 }
 
 #gameOverMessage {
     margin-top: 20px;
     font-size: 1.5rem;
     color: #f44336; /* Red color for the Game Over message */
-    display: none; /* Hide initially */
 }
 
 #gameOverMessage button {
@@ -83,12 +81,10 @@ button:disabled {
     padding: 10px 20px;
     font-size: 1rem;
     margin-top: 10px;
-    display: none; /* Hide initially */
 }
 
 #gameOverMessage button:hover {
     background-color: #e53935; /* Slightly darker red on hover */
-    display: none; /* Hide initially */
 }
 
 #startButton {
@@ -96,8 +92,9 @@ button:disabled {
     margin: 0 auto;
 }
 
-#restartButton {
-    display: none; /* Hide initially */
+/* Hidden class to control visibility */
+.hidden {
+    display: none !important;
 }
 
 @media screen and (max-width: 600px) {
