@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Cutting Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Fruit Cutting Game</h1>
+        <button id="startButton">Start Game</button>
+        <div id="score">Score: 0</div>
+        <img id="gameCanvas" src="{{ url_for('video_feed') }}" alt="Game Video Feed">
+    </div>
+
+    <script>
+        document.getElementById('startButton').addEventListener('click', function() {
+            fetch('/start_game', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);  // Log game start message
+                document.getElementById('score').textContent = 'Score: 0';
+            })
+            .catch(error => console.error('Error starting the game:', error));
+        });
+    </script>
+</body>
+</html>

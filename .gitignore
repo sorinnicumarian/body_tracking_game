@@ -1,1 +1,6 @@
 body_tracking_env_2/bin/
+body_tracking_env_2/lib/
+body_tracking_env_2/include/
+body_tracking_env_2/share/
+body_tracking_env_2/lib64/
+body_tracking_env_2/pyvenv.cfg
