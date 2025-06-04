@@ -1,4 +1,4 @@
-# ● Fruit Samurai  
+# Fruit Samurai  
 ### A Body Tracking Game for Injury Recovery  
 Harnessing Computer Vision for Fun, Interactive Rehabilitation  
 
