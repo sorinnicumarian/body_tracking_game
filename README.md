@@ -11,7 +11,7 @@ Originally developed as an innovative blend of **rehab tech and gamification**, 
 
 ---
 
-## 🎮 Example Gameplay
+## Example Gameplay
 
 Below is a snapshot of *Fruit Samurai* in action, showcasing real-time body tracking and the interactive slicing mechanic using hand gestures. The user’s fingertip is tracked to slice falling watermelons, simulating intuitive movement that supports rehabilitation exercises.
 
@@ -21,21 +21,21 @@ This image highlights the simple interface, real-time webcam feed, and the overl
 
 ## Features  
 
-- 🧠 **AI-Powered Body Tracking** using MediaPipe  
-- 🍉 **Virtual Watermelon Slicing** controlled by hand gestures  
-- 🎭 **Face Mask Overlay** with facial landmark detection  
-- 📈 **Real-Time Feedback** and dynamic scoring  
-- 🔁 **Rehabilitation-Friendly Loop** with soft reset and restart mechanics  
-- 🖥️ **Lightweight Local Deployment** – works offline with a webcam
+- **AI-Powered Body Tracking** using MediaPipe  
+- **Virtual Watermelon Slicing** controlled by hand gestures  
+- **Face Mask Overlay** with facial landmark detection  
+- **Real-Time Feedback** and dynamic scoring  
+- **Rehabilitation-Friendly Loop** with soft reset and restart mechanics  
+- **Lightweight Local Deployment** – works offline with a webcam
 
 ---
 
 ## Use Cases  
 
-- ✋ **Rehabilitation Centers** – Arm and shoulder therapy post-surgery  
-- 🎮 **Gamified Physical Therapy** – For kids and adults alike  
-- 🧪 **Research and Prototyping** – Human-computer interaction studies  
-- 🏠 **At-Home Recovery** – Engaging alternative to static rehab exercises
+- **Rehabilitation Centers** – Arm and shoulder therapy post-surgery  
+- **Gamified Physical Therapy** – For kids and adults alike  
+- **Research and Prototyping** – Human-computer interaction studies  
+- **At-Home Recovery** – Engaging alternative to static rehab exercises
 
 ---
 
