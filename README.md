@@ -15,7 +15,6 @@ Originally developed as an innovative blend of **rehab tech and gamification**, 
 
 Below is a snapshot of *Fruit Samurai* in action, showcasing real-time body tracking and the interactive slicing mechanic using hand gestures. The user’s fingertip is tracked to slice falling watermelons, simulating intuitive movement that supports rehabilitation exercises.
 
-![Gameplay Example](https://github.com/sorinnicumarian/body_tracking_game/blob/main/Game%20Screenshot.png)
 
 This image highlights the simple interface, real-time webcam feed, and the overlayed virtual fruit. The game is designed for accessibility and low hardware requirements, making it suitable for at-home recovery and experimentation with computer vision.
 
